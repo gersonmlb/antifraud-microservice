@@ -2,25 +2,20 @@ import { Controller, Inject, OnModuleInit } from '@nestjs/common';
 import { AppService } from './app.service';
 import {
   ClientKafka,
-  Ctx,
-  KafkaContext,
+  EventPattern,
   MessagePattern,
   Payload,
 } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
+import { Kafka } from 'kafkajs';
 
 @Controller()
-export class AppController implements OnModuleInit {
+export class AppController {
   constructor(
     private readonly appService: AppService,
 
     @Inject('ANTIFRAUDSERVICE')
     private readonly client: ClientKafka,
   ) {}
-
-  async onModuleInit() {
-    this.client.subscribeToResponseOf('transaction.validate');
-  }
 
   @MessagePattern('transaction.validate')
   public transactionValidate(
@@ -32,12 +27,13 @@ export class AppController implements OnModuleInit {
     this.transactionValidation(transactionId, valid);
   }
 
-  transactionValidation(id: string, status: string) {
-    console.log('RPTA de la validacioneas', {
+  async transactionValidation(id: string, status: string) {
+    console.log('RPTA de la validaciones', {
       transactionId: id,
       transactionStatus: status,
     });
-    return this.client.send('transaction.validate.response', {
+
+    this.client.emit('transaction.update', {
       transactionId: id,
       transactionStatus: status,
     });

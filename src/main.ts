@@ -6,10 +6,14 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.connectMicroservice({
     transport: Transport.KAFKA,
+    fromBeginning: true,
     options: {
       client: {
         clientId: 'antifraud-kafka',
         brokers: ['localhost:9092'],
+      },
+      consumer: {
+        groupId: 'kafka-transactions-15',
       },
     },
   } as MicroserviceOptions);
